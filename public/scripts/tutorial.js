@@ -4,7 +4,7 @@ var CommentBox = React.createClass({
       <div className="CommentBox">
         <h1>Comments</h1>
         Hello, world! I am a CommentBox.
-        <CommentList />
+        <CommentList data="{this.props.data}" />
         <CommentForm />
         <div><Button1 /></div>
         <Testing />
@@ -35,17 +35,28 @@ var CommentForm = React.createClass({
 });
 
 var Comment = React.createClass({
+  rawMarkup: function() {
+    var md = new Remarkable();
+    var rawMarkup = md.render(this.props.children.toString());
+    return { __html: rawMarkup };
+  },
+
   render: function() {
     return (
       <div className="comment">
         <h2 className="commentAuthor">
           {this.props.author}
         </h2>
-        {this.props.children}
+        <span dangerouslySetInnerHTML={this.rawMarkup()} />
       </div>
     );
   }
 });
+
+var data = [
+  {id: 1, author: "Jim Bob", text: "This is a comment"},
+  {id: 2, author: "Some Guy", text: "This is a differect comment"}
+];
 
 var Button1 = React.createClass({
   render: function() {
@@ -114,29 +125,90 @@ var Testing = React.createClass({
       }
     ]
 
-    const isDebit = transaction => transaction.type === 'debit'
-    const amount = transaction => transaction.amount
-    const sum = (a,b) => a+b
+    // First ecample
+    // const isDebit = transaction => transaction.type === 'debit'
+    // const amount = transaction => transaction.amount
+    // const sum = (a,b) => a+b
+    //
+    // const log = (value, name = 'default log name: ') => console.log(name, value) || value
+    //
+    // const totalSpent = log(statement.filter(
+    //     isDebit
+    // ).map(
+    //     amount
+    // )).reduce(
+    //     sum
+    // )
 
-    const log = (value, name = 'default log name: ') => console.log(name, value) || value
-
-    const totalSpent = log(statement.filter(
-        isDebit
-    ).map(
-        amount
-    )).reduce(
-        sum
+    // Second example
+    const debitTransactions = statement => statement.filter(
+        transaction => transaction.type === 'debit'
     )
+
+    const creditTransactions = statement => statement.filter(
+        transaction => transaction.type === 'credit'
+    )
+
+    const amount = statement => statement.map(
+        transaction => transaction.amount
+    )
+
+    const summation = values => values.reduce(
+        (previous, current) => previous + current
+    )
+
+    const totalAmount = (statement, filter, value, operation) => operation(
+        value(
+            filter(
+                statement
+            )
+        )
+    )
+
+    console.log(totalAmount(
+        statement,
+        debitTransactions,
+        amount,
+        summation
+    ))
+
+    // Third example
+    // const keyIsValue = (key, value) => element => element[key] === value
+    // const debitTransactions = statement => statement.filter(keyIsValue('type', 'debit'))
+    // const creditTransactions = statement => statement.filter(keyIsValue('type', 'credit'))
+    //
+    // const byKey = key => element => element[key]
+    // const amount = statement => statement.map(byKey('amount'))
+    //
+    // const summation = (previous, current) => previous + current
+    // const arraySummation = arr => arr.reduce(summation)
+    //
+    // const totalAmount = (statement, filter, value, operation) => operation(
+    //     value(
+    //         filter(
+    //             statement
+    //         )
+    //     )
+    // )
+    //
+    // console.log(totalAmount(
+    //     statement,
+    //     debitTransactions,
+    //     amount,
+    //     arraySummation
+    // ))
+
+    // Switch {totalAmount} out with totalSpent to view the results of the First example
 
     return (
       <div className="testing">
-        {totalSpent}
+        {totalAmount}
       </div>
     );
   }
 });
 
 ReactDOM.render(
-  <CommentBox />,
+  <CommentBox data={data} />,
   document.getElementById('content')
 );
